@@ -1,5 +1,5 @@
 from tkinter import *
-
+import time
 class draughtsboard:
 
     def __init__(self):
@@ -13,6 +13,7 @@ class draughtsboard:
         self.movedisplayframe = Frame(self.window, width=self.boardframewidth, height=self.movedisplayframeheight, bd=2, background="white")
         self.movedisplayframe.pack()
         self.movedisplaycanvas = Canvas(self.movedisplayframe, width=self.boardframewidth, height=self.movedisplayframeheight)
+        self.movedisplaycanvas.pack()
         self.boardframe = Frame(self.window, width=self.boardframewidth, height=self.boardframeheight, bd=2, background="white") 
         self.boardframe.pack()
         self.boardcanvas = Canvas(self.boardframe, width=self.boardframewidth, height=self.boardframeheight)
@@ -21,7 +22,7 @@ class draughtsboard:
         self.initboard()
         self.initmovedisplay()
         piece = draughtpiece(self.boardcanvas, "black", int(self.boardframeheight/8), 0)
-    
+        
         piece.place(self.boardposcoordinates[7][7])
         self.window.mainloop()
 
@@ -51,8 +52,18 @@ class draughtsboard:
 
     def initmovedisplay(self):
         
-        self.movedisplay = 
+        self.movedisplay_rectangle = self.movedisplaycanvas.create_rectangle(0, 0, self.boardframewidth, self.movedisplayframeheight, fill="black")
+        self.movedisplay_text = self.movedisplaycanvas.create_text(int(self.boardframewidth/2), int(self.movedisplayframeheight/2), text="It is black's move", fill="white", font=("Times", 13))
 
+    def changecurrentmove(self, nextmove):
+
+        if nextmove=="black":
+            self.movedisplaycanvas.itemconfig(self.movedisplay_rectangle, fill="black")
+            self.movedisplaycanvas.itemconfig(self.movedisplay_text, text="It is black's move", fill="white")
+        else:
+            self.movedisplaycanvas.itemconfig(self.movedisplay_rectangle, fill="white")
+            self.movedisplaycanvas.itemconfig(self.movedisplay_text, text="It is white's move", fill="black")
+        self.window.update()
 
 class draughtpiece:
 
