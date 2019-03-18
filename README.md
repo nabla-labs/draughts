@@ -19,3 +19,10 @@
 * No pieces from one party are left
 or
 * no allowed moves are left 
+#Interfaces
+## env.step(actions) returns observation, reward, done, info
+* actions: tuple(pieceID, np.array(posx, posy))
+* observation: np.array([8, 8, 3])->[posy, posx, type] with type=0:empty / 1: white stone / 2: black / 3: white king / 4: black king
+* reward: int
+* done: boolean if terminal state is reached
+* info: tbd
