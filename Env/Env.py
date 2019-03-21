@@ -54,6 +54,17 @@ class DraughtsEnv(gym.Env):
                             piece_id += 1
                         else:
                             self.state[row][col] = [0, 0, 0]
+                else:
+                    if row % 2:
+                        if col % 2:
+                            self.state[row][col] = [0, 0, 0]
+                        else:
+                            self.state[row][col] = [1, 0, 0]
+                    else:
+                        if col % 2:
+                            self.state[row][col] = [1, 0, 0]
+                        else:
+                            self.state[row][col] = [0, 0, 0]
 
         return self.state
 
@@ -61,7 +72,25 @@ class DraughtsEnv(gym.Env):
         pass
 
     def render(self):
-        pass
+        string = ''
+        for row in range(8):
+            string += '\n{}: '.format(row)
+            for col in range(8):
+                if self.state[row][col][1] == 0.0:
+                    if self.state[row][col][0] == 0.0:
+                        string += '■ '
+                    else:
+                        string += '□ '
+                if self.state[row][col][1] == 1.0:
+                    string += '● '
+                if self.state[row][col][1] == 2.0:
+                    string += '○ '
+                if self.state[row][col][1] == 3.0:
+                    string += '♔ '
+                if self.state[row][col][1] == 4.0:
+                    string += '♚ '
+        string += '\n   A B C D E F G H'
+        print(string)
 
     def is_done(self):
         return self.is_done
@@ -79,7 +108,7 @@ class DraughtsEnv(gym.Env):
                     all_actions[piece_id] = action_arr
 
     def check_first_possible_position(self, row, col, piece_type):
-        jumped =True
+        jumped = True
         # theoretical jump positions
         possible_pos = self.get_diagonal_fields(row, col, piece_type, 2)
 
