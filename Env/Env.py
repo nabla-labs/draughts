@@ -78,13 +78,13 @@ class DraughtsEnv(gym.Env):
             for col in range(8):
                 if self.state[row][col][1] == 0.0:
                     if self.state[row][col][0] == 0.0:
-                        string += '■ '
-                    else:
                         string += '□ '
+                    else:
+                        string += '■ '
                 if self.state[row][col][1] == 1.0:
-                    string += '● '
-                if self.state[row][col][1] == 2.0:
                     string += '○ '
+                if self.state[row][col][1] == 2.0:
+                    string += '● '
                 if self.state[row][col][1] == 3.0:
                     string += '♔ '
                 if self.state[row][col][1] == 4.0:
