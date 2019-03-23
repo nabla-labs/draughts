@@ -101,10 +101,10 @@ class DraughtsEnv(gym.Env):
             for col in range(self.state.shape[1]):
                 # if field is not empty and piece is dran
                 if self.is_valid_draw(self.state[row][col][1]):
-                    possible_pos = self.check_first_possible_position(
+                    possible_pos, jumped = self.check_first_possible_position(
                         row, col, self.state[row][col][1])
                     action_arr, piece_id = self.find_actions(
-                        row, col, self.state[row][col][1], self. move_indicator, True)
+                        row, col, possible_pos, self.state[row][col][1])
                     all_actions[piece_id] = action_arr
 
     def check_first_possible_position(self, row, col, piece_type):
@@ -112,10 +112,12 @@ class DraughtsEnv(gym.Env):
         # theoretical jump positions
         possible_pos = self.get_diagonal_fields(row, col, piece_type, 2)
 
+        # checks if we can jump to the field in possible_pos, if not removes it
         for pos in possible_pos:
             if not self.is_jump(pos, (row, col)):
                 possible_pos.remove(pos)
 
+        # if no jump is possible, check the basic moves are possible
         if not possible_pos:
             possible_pos = self.get_diagonal_fields(row, col, piece_type, 1)
             jumped = False
@@ -133,7 +135,26 @@ class DraughtsEnv(gym.Env):
                             (row-rad, col + rad), (row-rad, col-rad)]
         return possible_pos
 
-    def find_actions(self, row, col, piece_type, move_indicator, recursive=False):
+    def find_actions(self, row, col, current_path, piece_type):
+        if not self.is_empty((row+1, col+1)) and self.is_empty((row+2, col+2)):
+            current_path.append((row+2, col+2))
+            self.find_actions(row+2, col+2, current_path, piece_type)
+            current_path.pop()
+        if not self.is_empty((row+1, col-1)) and self.is_empty((row+2, col-2)):
+            current_path.append((row+2, col-2))
+            self.find_actions(row+2, col-2, current_path, piece_type)
+            current_path.pop()
+        if piece_type == 3 or piece_type == 4:
+            if not self.is_empty((row-1, col+1)) and self.is_empty((row-2, col+2)):
+                current_path.append((row-2, col+2))
+                self.find_actions(row-2, col+2, current_path, piece_type)
+                current_path.pop()
+            if not self.is_empty((row-1, col-1)) and self.is_empty((row-2, col-2)):
+                current_path.append((row-2, col-2))
+                self.find_actions(row-2, col-2, current_path, piece_type)
+                current_path.pop()
+        return current_path
+
         pass
 
     def is_empty(self, pos):
