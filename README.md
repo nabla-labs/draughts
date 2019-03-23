@@ -3,14 +3,23 @@
 ## Initial state
 * 12 pieces for each player
 * Only dark fields are occupied
+
 0: □ ○ □ ○ □ ○ □ ○ 
+
 1: ○ □ ○ □ ○ □ ○ □ 
+
 2: □ ○ □ ○ □ ○ □ ○ 
+
 3: ■ □ ■ □ ■ □ ■ □ 
+
 4: □ ■ □ ■ □ ■ □ ■ 
+
 5: ● □ ● □ ● □ ● □ 
+
 6: □ ● □ ● □ ● □ ● 
+
 7: ● □ ● □ ● □ ● □ 
+
    A B C D E F G H
 
 
