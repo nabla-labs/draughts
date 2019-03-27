@@ -1,9 +1,12 @@
 from tkinter import *
 import numpy as np
+from threading import Thread
+
+import time
 
 class draughtsboard:
 
-    def __init__(self):
+    def __init__(self, window=None):
 
         self.window = Tk()
         self.boardframewidth = 400
@@ -20,11 +23,15 @@ class draughtsboard:
         self.boardframe.pack()
         self.boardcanvas = Canvas(self.boardframe, width=self.boardframewidth, height=self.boardframeheight)
         self.boardcanvas.pack()
-        
+        #self.window.event_add('<<virttest>>')
+        self.window.bind('<<virttest>>', self.testhandler)
         self.initboard()
         self.initmovedisplay()
-                
+        #self.window.mainloop()
+
+    def testhandler(self):
         
+        print("Hallo")
         
 
     def initboard(self):
@@ -40,7 +47,8 @@ class draughtsboard:
 
             for y in range(0, self.boardframeheight, dy):
                 
-                self.boardcanvas.create_rectangle(x, y, x+dx, y+dy, fill=Filling)
+                rectangle = self.boardcanvas.create_rectangle(x, y, x+dx, y+dy, fill=Filling)
+                self.boardcanvas.tag_bind(rectangle, '<Button-1>', self.clickonfield)
                 columncoordinates.append((x+int(dx/2), y+int(dy/2)))
 
                 if y != int(self.boardframeheight*(7/8)):
@@ -88,6 +96,10 @@ class draughtsboard:
                     self.pieces.append(piece)
         self.window.update()
 
+    def clickonfield(self, event):
+        print("Click")
+        print(event.x, event.y)
+
 class draughtpiece:
 
     def __init__(self, canvas, color, dim, ID):
@@ -102,6 +114,7 @@ class draughtpiece:
         self.posy = None
         self.dim = dim
         self.id = ID
+        
 
     def place(self, xytuple):
 
@@ -112,6 +125,7 @@ class draughtpiece:
             
             self.piece = self.canvas.create_oval(x-int(self.dim/2), y-int(self.dim/2), x+(self.dim/2), y+(self.dim/2), fill=self.color)
             self.text = self.canvas.create_text(x, y, text=str(self.id), fill=self.textcolor, font=("Times", 15))
+
         else:
             
             self.canvas.move(self.piece,x-self.posx, y-self.posy)
@@ -120,13 +134,29 @@ class draughtpiece:
         self.posx = x
         self.posy = y
 
+def startmainloop(boardobject):
+
+    boardobject.event_generate('<<virttest>>')
+
 if __name__=="__main__":
 
-    db = draughtsboard()
+    window = Tk()
+    db = draughtsboard(window)
     state = np.zeros([8, 8, 3])
     state[0, 0, 1] = 2
     state[0, 0, 2] = 1
     state[7, 7, 1] = 1
     state[7, 7, 2] = 2
+   # db.settostate(state)
+    #mainthread = Thread(target = startmainloop, args=([window]))
+    #mainthread.start()
+    #window.mainloop()
+    print("HI")
     db.settostate(state)
-    db.window.mainloop()
+    window.mainloop()
+    #while True:
+    #    print("WWWW")
+    #    time.sleep(1)
+    #mainthread.join()
+
+    
