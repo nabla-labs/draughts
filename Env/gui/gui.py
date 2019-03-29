@@ -34,6 +34,12 @@ class draughtsboard:
         self.endpos_markers = None
         self.endpositions = None
         self.highlighted_endpos = None
+        self.submitted_action_path = None
+
+    def get_user_move(self):
+
+        self.window.mainloop()
+        return self.submitted_action_path
 
     def initboard(self):
 
@@ -168,7 +174,19 @@ class draughtsboard:
             self.unmark_actions_of_piece()
     
     def submit_action_callback(self):
-        print("Button")
+        submitted_endpos = self.endpositions[self.highlighted_endpos]
+        piece_actions = self.get_actions_by_id(self.marked_piece.id)
+        path = self.get_path_by_endpos(piece_actions, submitted_endpos)
+        self.submitted_action_path = path
+        self.window.quit()
+
+    def get_path_by_endpos(self, action_paths, endpos):
+
+        for path in action_paths:
+
+            if path[-1] == endpos:
+
+                return path
 
     def mark_piece(self, piece):
         
