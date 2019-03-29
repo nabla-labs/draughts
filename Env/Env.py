@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import gym
 import numpy as np
+import copy
 
 
 class DraughtsEnv(gym.Env):
@@ -98,36 +99,43 @@ class DraughtsEnv(gym.Env):
         return self.is_done
 
     def get_possible_actions(self):
-        all_actions = np.zeros([12])
+        all_actions = []
         for row in range(self.state.shape[0]):
             for col in range(self.state.shape[1]):
                 # if field is not empty and piece is dran
                 if self.is_valid_draw(self.state[row][col][1]):
-                    piece_action_paths = []
-                    possible_pos, jumped = self.check_first_possible_position(
-                        row, col, self.state[row][col][1])
-                    action_arr, piece_id = self.find_actions(
-                        row, col, possible_pos, self.state[row][col][1], piece_action_paths)
-                    all_actions[piece_id] = np.array(piece_action_paths)
+                    
+                    piece_id, piece_actions = self.get_possible_actions_piece(row, col)
+                    all_actions.append((piece_id, piece_actions))
+                else:
+                    all_actions.append((self.state[row][col][2], []))
+
         return all_actions
+
+    def get_possible_actions_piece(self, row, col):
+        action_paths = []
+        possible_pos, jumped = self.check_first_possible_position(
+            row, col, self.state[row][col][1])
+        
+        if jumped:
+            [self.find_actions(pos[0], pos[1], [(row, col), pos], self.state[row][col][1], action_paths) for pos in possible_pos]
+        else: 
+            action_paths = possible_pos
+        return self.state[row][col][2], action_paths
 
     def check_first_possible_position(self, row, col, piece_type):
         jumped = True
         # theoretical jump positions
         possible_pos = self.get_diagonal_fields(row, col, piece_type, 2)
-
         # checks if we can jump to the field in possible_pos, if not removes it
-        for pos in possible_pos:
-            if not self.is_jump(pos, (row, col), piece_type):
-                possible_pos.remove(pos)
+        possible_pos = [pos for pos in possible_pos if self.is_jump(pos, (row, col), piece_type)]
 
         # if no jump is possible, check the basic moves are possible
         if not possible_pos:
             possible_pos = self.get_diagonal_fields(row, col, piece_type, 1)
             jumped = False
-            for pos in possible_pos:
-                if not self.is_empty(pos):
-                    possible_pos.remove(pos)
+            possible_pos = [pos for pos in possible_pos if self.is_empty(pos)]
+        
         return possible_pos, jumped
 
     def get_diagonal_fields(self, row, col, piece_type, rad):
@@ -143,29 +151,25 @@ class DraughtsEnv(gym.Env):
     def is_in_board(self, pos):
         return (pos[0] >= 0 and pos[0] <= 7) and (pos[1] >= 0 and pos[1] <= 7)
 
-    def find_actions(self, row, col, current_path, piece_type, piece_action_paths):
-        #piece_type check for +-1 seems to be missing. And some kind of logic to change the move-direction of non-king pieces needs to be added.
-        if self.is_enemy_piece((row+1*self.move_indicator, col+1)) and self.is_empty((row+2*self.move_indicator, col+2)) and not (row+2*self.move_indicator, col+2) in current_path:
-            current_path.append((row+2*self.move_indicator, col+2))
-            self.find_actions(row+2*self.move_indicator, col+2, current_path, piece_type)
-            current_path.pop()
-        if self.is_enemy_piece((row+1*self.move_indicator, col-1)) and self.is_empty((row+2*self.move_indicator, col-2)) and not (row+2*self.move_indicator, col-2) in current_path:
-            current_path.append((row+2*self.move_indicator, col-2))
-            self.find_actions(row+2*self.move_indicator, col-2, current_path, piece_type)
-            current_path.pop()
-        if piece_type == 3 or piece_type == 4:
-            if  self.is_enemy_piece((row-1*self.move_indicator, col+1)) and self.is_empty((row-2*self.move_indicator, col+2)) and not (row-2*self.move_indicator, col+2) in current_path:
-                current_path.append((row-2*self.move_indicator, col+2))
-                self.find_actions(row-2*self.move_indicator, col+2, current_path, piece_type)
-                current_path.pop()
-            if  self.is_enemy_piece((row-1*self.move_indicator, col-1)) and self.is_empty((row-2*self.move_indicator, col-2)) and not row(-2*self.move_indicator, col-2) in current_path:
-                current_path.append((row-2*self.move_indicator, col-2))
-                self.find_actions(row-2*self.move_indicator, col-2, current_path, piece_type)
-                current_path.pop()
-        #Shouldnt it be sth like global possible actions.append(current_path)
-        piece_action_paths.append(current_path)
+    def find_actions(self, row, col, current_path, piece_type, action_paths):
+        #get the possible fields for jumps from position row/col
+        possible_pos = self.get_diagonal_fields(row, col, piece_type, 2)
+        
+        #remove the position we came from if it is in the list of possible positions
+        try:
+            possible_pos.remove(current_path[-2])
+        except:
+            pass
+        terminal_state = True
+        for pos in possible_pos:
 
-        pass
+            if self.is_jump(pos, (row, col), piece_type):
+                terminal_state = False
+                current_path.append(pos)
+                self.find_actions(pos[0], pos[1], current_path, piece_type, action_paths)
+                current_path.pop()
+        if terminal_state:
+            action_paths.append(copy.deepcopy(current_path)[1:])
 
     def is_empty(self, pos):
         return self.state[pos[0]][pos[1]][1] == 0
@@ -177,7 +181,6 @@ class DraughtsEnv(gym.Env):
         y = pos[0]-row
 
         pos_between = (int(row+y/2), int(col+x/2))
-        
         return self.is_enemy_piece(pos_between[0], pos_between[1], piece_type) and self.is_empty(pos)
     
     def get_color(self, piece_type):
@@ -185,9 +188,11 @@ class DraughtsEnv(gym.Env):
             return self.black
         elif piece_type in self.white:
             return self.white
+        else:
+            return None
 
     def is_enemy_piece(self, row, col, piece_type):
-        return not(self.get_color(self.state[row][col][1]) == self.get_color(piece_type))
+        return not(self.get_color(self.state[row][col][1]) == self.get_color(piece_type)) and not self.is_empty((row, col))
 
     def is_valid_draw(self, p_type):
         if self.move_indicator == -1 and (p_type ==  2 or p_type == 4):
