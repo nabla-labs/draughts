@@ -120,8 +120,8 @@ class DraughtsEnv(gym.Env):
         if jumped:
             [self.find_actions(pos[0], pos[1], [(row, col), pos], self.state[row][col][1], action_paths) for pos in possible_pos]
         else: 
-            action_paths = possible_pos
-        return self.state[row][col][2], action_paths
+            action_paths = [[pos] for pos in possible_pos]
+        return int(self.state[row][col][2]), action_paths
 
     def check_first_possible_position(self, row, col, piece_type):
         jumped = True
