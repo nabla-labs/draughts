@@ -15,7 +15,8 @@ class DraughtsEnv(gym.Env):
         self.state = np.zeros((8, 8, 3))
         #black = -1
         self.move_indicator = -1
-        self.is_done = False
+        self.deleted_pieces = []
+        self.game_state = None
         pass
 
     def reset(self):
@@ -25,7 +26,7 @@ class DraughtsEnv(gym.Env):
 
         the field type is a 1x3 vector with [field_color, field_type, piece_id]
             field_color: 0=white, 1=black
-            field_type:  0=empty, 1=white piece, 2=black piece, 3=white king, 4=black king
+            piece_type:  0=empty, 1=white piece, 2=black piece, 3=white king, 4=black king
             piece_id:    0=empty, 1-12=white, 13-24=black
         """
         piece_id = 1
@@ -69,10 +70,82 @@ class DraughtsEnv(gym.Env):
                         else:
                             self.state[row][col] = [0, 0, 0]
 
+        self.possible_actions = self.get_possible_actions()
+        self.game_state = "go"
         return self.state
 
-    def step(self):
-        pass
+    def step(self, action):
+        
+        if self.game_state[0:2] == "go" and action:
+            self.apply_action(action)
+            self.check_done()
+        # TODO: handling of draw suggestion by one player with a counter
+        elif not action:
+            if self.move_indicator == -1:
+                self.game_state = "go-bd"
+            else:
+                self.game_state = "go-wd"
+        
+        return self.state, reward
+    
+    def verify_action(self, action):
+
+        for act in self.possible_actions:
+            
+            if act[0] == action[0]:
+
+                assert action in act[1]
+
+    # action = (id, [(x, y), (x, y)])
+
+    # pos(row, col)
+    def move_piece_to_pos(self, piece_id, pos):
+
+        for row in self.state:
+
+            for field in row:
+
+                if field[2] == piece_id:
+
+                    self.state[pos[0]][pos[1]] = field
+                    field = [field[0], 0, 0]
+
+    
+    def delete_piece(self, pos):
+
+        row, col = pos
+        self.deleted_pieces.append((self.state[row][col][1], self.state[row][col][2]))
+        self.state[row][col] = [self.state[row][col][0], 0, 0]
+
+
+    def check_for_kings(self):
+
+        for row in self.state:
+
+            for row_ind, piece in enumerate(row):
+
+                if piece[1] == 1 and row_ind == 0:
+
+                    piece[1] = 3
+                
+                if piece[1] == 2 and row_ind == 7:
+
+                    piece[1] = 4
+
+
+    def apply_action(self, action):
+        
+        self.verify_action(action)
+        self.move_piece_to_pos(action[0], action[1][-1])
+        pieces_to_delete = action[:-1]
+        
+        for piece in pieces_to_delete:
+            self.delete_piece(piece)
+
+        self.check_for_kings()
+        self.move_indicator = self.move_indicator*(-1)
+        self.possible_actions = self.get_possible_actions()
+
 
     def render(self):
         string = ''
@@ -95,8 +168,14 @@ class DraughtsEnv(gym.Env):
         string += '\n   A B C D E F G H'
         print(string)
 
-    def is_done(self):
-        return self.is_done
+    def check_done(self):
+        
+        if not self.possible_actions:
+            
+            if self.move_indicator == -1:
+                self.game_state = "ww"
+            else:
+                self.game_state = "bw"
 
     def get_possible_actions(self):
         all_actions = []
@@ -107,8 +186,6 @@ class DraughtsEnv(gym.Env):
                     
                     piece_id, piece_actions = self.get_possible_actions_piece(row, col)
                     all_actions.append((piece_id, piece_actions))
-                else:
-                    all_actions.append((self.state[row][col][2], []))
 
         return all_actions
 

@@ -7,7 +7,7 @@ gui = draughtsboard()
 #gui.settostate(env.reset())
 
 
-env.move_indicator = -1
+env.move_indicator = 1
 #env.state[2][1][1] = 0
 #env.state[2][1][0] = 0
 #env.state[4][1][1] = 1
@@ -35,7 +35,8 @@ env.state[6][3][2] = 5
 #act = env.get_possible_actions_piece(5, 0)
 #act = env.get_possible_actions_piece(1, 2)
 act = env.get_possible_actions()
-gui.settostate(env.state, "black", act)
+print(act)
+gui.settostate(env.state, "white", act)
 #print(act)
 #print(gui.boardposcoordinates)
 print(gui.get_user_move())
