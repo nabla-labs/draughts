@@ -135,7 +135,7 @@ class draughtsboard:
         clicked_field = self.convert_coord_to_colrow(event.x, event.y)
         print(clicked_field)
 
-        if (clicked_field[1], clicked_field[0]) in self.endpositions:
+        if self.endpositions is not None and (clicked_field[1], clicked_field[0]) in self.endpositions:
 
             endpos_index = self.endpositions.index((clicked_field[1], clicked_field[0]))
             self.enable_submit_button()
