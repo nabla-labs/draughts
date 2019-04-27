@@ -108,17 +108,21 @@ class DraughtsEnv(gym.Env):
         for act in self.possible_actions:
 
             if act[0] == action[0]:
-
-                assert action in act[1]
+                
+                assert action[1] in act[1]
 
     def move_piece_to_pos(self, piece_id, pos):
-        for row in self.state:
-            for field in row:
-                if field[2] == piece_id:
+        for row_id, row in enumerate(self.state):
+            for field_id, field in enumerate(row):
+                if int(field[2]) == piece_id:
                     self.state[pos[0]][pos[1]] = field
-                    field = [field[0], 0, 0]
+                    self.state[row_id][field_id] = [field[0], 0, 0]
+                    break
+            else:
+                continue
+            break
 
-    def delete_piece(self, pos):
+    def delete_piece_at_pos(self, pos):
         row, col = pos
         self.deleted_pieces.append(
             (self.state[row][col][1], self.state[row][col][2]))
@@ -133,16 +137,31 @@ class DraughtsEnv(gym.Env):
                     piece[1] = 4
 
     def apply_action(self, action):
+        current_piece_pos = self.get_piece_pos_by_id(action[0])
         self.verify_action(action)
         self.move_piece_to_pos(action[0], action[1][-1])
-        pieces_to_delete = action[:-1]
+        positions_to_visit = [current_piece_pos] + action[1]
+        pieces_to_delete = self.get_positions_between(positions_to_visit)
 
-        for piece in pieces_to_delete:
-            self.delete_piece(piece)
+        for piece_pos in pieces_to_delete:
+
+            self.delete_piece_at_pos(piece_pos)
 
         self.check_for_kings()
         self.move_indicator = self.move_indicator*(-1)
         self.possible_actions = self.get_possible_actions()
+
+    def get_positions_between(self, positions):
+
+        pos_between = []
+        for i in range(len(positions)-1):
+            vec_row = positions[i+1][0]-positions[i][0]
+            print(vec_row)
+            vec_col = positions[i+1][1]-positions[i][1]
+            print(vec_col)
+            pos_between.append((positions[i][0]+int(vec_row*0.5), positions[i][1]+int(vec_col*0.5)))
+        
+        return pos_between
 
     def render(self):
         string = ''
@@ -183,6 +202,7 @@ class DraughtsEnv(gym.Env):
                     piece_id, piece_actions = self.get_possible_actions_piece(
                         row, col)
                     all_actions.append((piece_id, piece_actions))
+        self.possible_actions = all_actions
         return all_actions
 
     def get_possible_actions_piece(self, row, col):
@@ -275,3 +295,12 @@ class DraughtsEnv(gym.Env):
             return True
         elif p_type is 0:
             return False
+
+    def get_piece_pos_by_id(self, piece_id):
+
+        for row_id, row in enumerate(self.state):
+            for col_id, field in enumerate(row):
+
+                if int(field[2]) == piece_id:
+
+                    return (row_id, col_id)

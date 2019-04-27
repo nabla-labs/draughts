@@ -177,7 +177,7 @@ class draughtsboard:
         submitted_endpos = self.endpositions[self.highlighted_endpos]
         piece_actions = self.get_actions_by_id(self.marked_piece.id)
         path = self.get_path_by_endpos(piece_actions, submitted_endpos)
-        self.submitted_action_path = path
+        self.submitted_action_path = [(self.marked_piece.id, path)]
         self.window.quit()
 
     def get_path_by_endpos(self, action_paths, endpos):
