@@ -94,13 +94,13 @@ class DraughtsEnv(gym.Env):
                     self.game_state = "go-wd"
 
         if self.game_state == "draw":
-            reward = (1, 1)
+            reward = (0.5, 0.5)
             self.is_done = True
         elif self.game_state == "bw":
-            reward = (2, -2)
+            reward = (1, -1)
             self.is_done = True
         elif self.game_state == "ww":
-            reward = (-2, 2)
+            reward = (-1, 1)
             self.is_done = True
         return self.state, reward, self.is_done
 
@@ -295,6 +295,9 @@ class DraughtsEnv(gym.Env):
             return True
         elif p_type is 0:
             return False
+
+    def get_move_indicator(self):
+        return self.move_indicator
 
     def get_piece_pos_by_id(self, piece_id):
 
