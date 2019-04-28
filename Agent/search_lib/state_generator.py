@@ -69,6 +69,6 @@ class StateGenerator:
         for i in range(len(positions)-1):
             vec_row = positions[i+1][0] - positions[i][0]
             vec_col = positions[i+1][1] - positions[i][1]
-            pos_between.append((positions[i][0]+int(vec_row*0.5), positions[i][1]+int(vec_col*0.5)))
-        
+            pos_between.append((positions[i][0]+int(vec_row*0.5),
+                                positions[i][1]+int(vec_col*0.5)))
         return pos_between
